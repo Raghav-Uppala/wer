@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="./style.css">
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css"
+    integrity="sha384-wcIxkf4k558AjM3Yz3BBFQUbk/zgIYC2R0QpeeYb+TwlBVMrlgLqwRjRtGZiK7ww" crossorigin="anonymous">
+  
+  <!-- The loading of KaTeX is deferred to speed up page rendering -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.js"
+        integrity="sha384-hIoBPJpTUs74ddyc4bFZSM1TVlQDA60VBbJS0oA934VSz82sBx1X7kSx2ATBDIyd" crossorigin="anonymous"></script> -->
+  
+  <!-- To automatically render math in text elements, include the auto-render extension: -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/contrib/auto-render.min.js"
+    integrity="sha384-43gviWU0YVjaDtb/GhzOouOXtZMP/7XUzwPTstBeZFe/+rCMvRwr4yROQP43s0Xk" crossorigin="anonymous"
+    onload="renderMathInElement(document.body);"></script>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="./wer.js"></script>
+  <script src="./wer_blocks.js"></script>
+  <script src="./wer_toolbar.js"></script>
+
+</head>
+<body>
+  <!-- <div id="popup" style="display: none;">    
+    <ul id="myUL">
+      <li><a class="focused" type="para" onclick="addOnlyClass('para')">Text</a></li>
+      <li ><a type="H1" onclick="addOnlyClass('H1', currentId)">Heading 1</a></li>
+      <li><a type="H2" onclick="addOnlyClass('H2', currentId)">Heading 2</a></li>
+      <li><a type="H3" onclick="addOnlyClass('H3', currentId)">Heading 3</a></li>
+      <li><a type="MB" onclick="addOnlyClass('MB', currentId)">Math</a></li>
+    </ul>
+  </div> -->
+  <!-- <div  id="toolbar">
+    <button id="B" onclick="toolBar('bold','B')">bold</button>
+    <button id="I" onclick="toolBar('italic','I')">Italics</button>
+    <button id="U" onclick="toolBar('underline','U')">Underline</button>
+    <button id="S" onclick="toolBar('strikethrough','S')">Strikethrough</button>
+  </div> -->
+
+  <div id='editor'>
+  </div>
+  
+  
+  <!-- <div contenteditable="true">test <a onclick="document.location = 'www.xy.com';" >link</a></div> -->
+  
+  <script>
+    let blockTypes = {
+        "title": {
+          "class": Title,
+        },
+        "text": {
+          "class": Text,
+        },
+        "list": {
+          "class": List,
+          "tabIndentUnit": "rem",
+          "tabIndent": "1"
+        },
+        "heading": {
+          "class": Heading,
+        },
+        "math": {
+          "class": MathTex,
+        }
+      } 
+    let toolBar = {
+      "Bold": {
+        "class": Bold
+      },
+      "Italics": {
+        "class": Italic
+      },
+      "Test": {
+        "class": Test
+      }
+    }
+    let saveData;
+    const editor = new Editor('editor', blockTypes, toolBar)
+    runEditor(editor)
+    
+    // const t2 = new Editor('1editor', blockTypes)
+    // t2.createNewBlock("title")
+    // test(t2)
+  </script>
+</body>
+</html>
