@@ -20,7 +20,6 @@ class ToolBar {
   }
   onClickJS (property) {
     document.execCommand(property)
-    // selectedBlock.writeDiv.innerHTML = newHtml
   }
   isActive(editor, property, otag, ctag) {
     const selectedBlock = editor.currentBlock()
@@ -131,6 +130,11 @@ class Italic extends ToolBar{
   }
 }
 
+
+// Use popover api on the anchor tag to display the link info.
+// the algo to add the anchor tag should be abstracted to its own function in ToolBar
+// that algo should work based off of similar principals as the isActive algo
+// checks for html tags before selection starts and in selection, then adds that as off set to the start and end index.
 class Test extends ToolBar{
   static type;
   static name;
@@ -144,8 +148,8 @@ class Test extends ToolBar{
   mdSuffix;
   constructor(editor, button) {
     super(); 
-    this.open = "<span style='color:red;'>"
-    this.close = "</span>"
+    this.open = "<a onclick=\"document.location = 'https://www.xyz.com';\">"
+    this.close = "</a>"
     this.mdPrefix = "";
     this.mdSuffix = "";
     this.type = "test"
@@ -162,9 +166,6 @@ class Test extends ToolBar{
     newContent = newContent.slice(0, selectionIndex.start) + this.open + newContent.slice(selectionIndex.start);
     newContent = newContent.replace(/\n|\r/g,'')
     selectedBlock.writeDiv.innerHTML = newContent
-    // selectedBlock.writeDiv.innerText += " "
-    // selectedBlock.setCurrentCursorPosition(selectionIndex.end+1, selectedBlock.writeDiv)
-    console.log(selectedBlock.writeDiv.childNodes[1].nextSibling)
   }
   isActive(editor) {
     this.active = super.isActive(editor, this.type, "<span style='color:red;'>", "</span>")
