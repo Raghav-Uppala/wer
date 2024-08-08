@@ -15,8 +15,6 @@ class Editor {
   constructor(editor, blockTypes, toolBarInit) {
     this.blocks = {}
     this.blockIds = []
-    this.currentId;
-    this.currentIdIndex;
     this.editor = document.getElementById(editor);
     this.blockTypes = blockTypes;
     this.toolBarInit = toolBarInit;
@@ -36,12 +34,16 @@ class Editor {
     }
     if(this.allSaveData != null) {
       this.saveData = this.allSaveData["versions"][this.allSaveData["versions"].length - 1 - this.ctrlZlevel]
+      this.currentId = this.saveData["blockData"][0].id;
+      this.currentIdIndex = 0;
       for (let i in this.saveData["blockData"]) {
         let type = this.saveData["blockData"][i].type
         this.loadBlock((new this.blockTypes[type]["class"](type, this.blockTypes[type])), this.saveData["blockData"][i].extra, this.saveData["blockData"][i])
       }
     } else {
       this.createNewBlock("title")
+      this.currentId = this.blockIds[0];
+      this.currentIdIndex = 0;
     }
     // this.focusOnBlock(this.blockIds[this.blockIds.length - 1])
     
@@ -73,7 +75,8 @@ class Editor {
         ul.appendChild(liEl) 
       }
     }
-    $(ul).css("display", "none");
+    ul.popover = "manual"
+    ul.hidePopover()
     this.editor.appendChild(ul)
   }
   createToolBar() {
@@ -169,11 +172,11 @@ class Editor {
         return { left:rect.right + pageOffset.x, top:rect.bottom + pageOffset.y }
     }
   }
-  focusOnBlock(id, caret="end") {
+  focusOnBlock(id, e="none", caret="end") {
     this.currentId = id
     this.currentIdIndex = this.blockIds.indexOf(this.currentId)
     document.getElementById(this.currentId).querySelector(".blockEditor").focus()
-    this.blocks[this.currentId].onFocusJS()
+    this.blocks[this.currentId].onFocusJS(e)
     // console.log(document.getElementById(this.currentId).querySelector(".blockEditor"))
     if(caret != "none"){
       this.blocks[this.currentId].setCaret(caret)
@@ -395,14 +398,15 @@ class Block {
     newBlock.appendChild(blockEditor)
     this.thisBlock = newBlock;
     this.writeDiv = blockEditor;
-    this.updateStyle()
-    this.onLoadRunJS()
 
     if(id == "end") {
       this.editor.append(newBlock)
     } else {
       this.editor.insertBefore(newBlock, document.getElementById(id))
     }
+
+    this.updateStyle()
+    this.onLoadRunJS()
   }
   deleteBlock(override = false){
     if(this.deletable == true || override == true) {
@@ -563,8 +567,8 @@ class Block {
   onLoadRunJS() {
     this.typeObj.typeOnLoadJS(this, this.editorObj)
   }
-  onFocusJS() {
-    this.typeObj.typeOnFocusJS(this, this.editorObj)
+  onFocusJS(e) {
+    this.typeObj.typeOnFocusJS(this, this.editorObj, e)
   }
   convert(type) {
     this.removeBlockStyling()
@@ -772,7 +776,6 @@ function runEditor(editor) {
         }
       }
       if(e.key == "Backspace") {
-        console.log(ctrlASelect, "ctrlASelect")
         if(ctrlASelect == true) {
           e.preventDefault();
           let blocks = Array.from(editor.editor.querySelectorAll(".selectedBlock"))
@@ -808,13 +811,19 @@ function runEditor(editor) {
       e.target.parentNode.setAttribute("draggable", "true")
     }
     if(e.target.matches('.blockEditor') == true) {
-      editor.focusOnBlock(e.target.parentNode.id)
+      editor.focusOnBlock(e.target.parentNode.id, e)
     }
     if(!e.target.matches(".toolBarTool")) {
       document.getElementById("toolbar"+editor.editor.id).style["display"] = "none"
     }
     if(editor.contentEditable == false) {
       editor.setContentEditable(true)
+    }
+  })
+
+  editor.editor.addEventListener('click', function(e) {
+    if(e.target.matches(".fullBlock")) {
+      editor.currentBlock().typeObj.typeOnClickJS(e, editor)
     }
   })
 
@@ -870,26 +879,31 @@ function runEditor(editor) {
   document.addEventListener('keyup', function(e) {
     if (e.target.matches(".blockEditor"+editor.editor.id) == true) {
       let wholeText = e.target.innerText;
+      const popover = document.getElementById("popup"+editor.editor.id)
       if(e.key == '/' && editor.currentBlock().typeObj.turnOnSlashCommand == true) {
-        document.getElementById("popup"+editor.editor.id).style.display = "block";
-        console.log("h")
+        let selection = window.getSelection()
+        let range = selection.getRangeAt(0)
+        let rect = range.getClientRects()[0]
+        popover.style.top = `${Math.round(rect.bottom)}px`
+        popover.style.left = `${Math.round(rect.left)}px`
+        popover.showPopover()
         slashCommand = true;
         slashPos = editor.blocks[editor.currentId].getCaretPosition()[0];
       }
       if(slashCommand == true) {
+        let filter, ul, li, a, i, txtValue;
+        ul = document.getElementById("popup" + editor.editor.id);
+        li = ul.getElementsByTagName('li');
         let currentPos = editor.blocks[editor.currentId].getCaretPosition()[0]
+        
         if (currentPos < slashPos || escapeSearch == true || e.key == 'Escape' || (e.key == 'Backspace' &&(wholeText.length < slashPos + 1 || wholeText[slashPos - 1] != "/"))) {
-          $("#popup"+editor.editor.id).css("display", "none")
+          ul.hidePopover()
           editor.currentBlock().updateContent(e.target.innerHTML, e.target.innerText)
           slashCommand = false
           escapeSearch = false
           noResults = false
           return;
         }
-
-        let filter, ul, li, a, i, txtValue;
-        ul = document.getElementById("popup" + editor.editor.id);
-        li = ul.getElementsByTagName('li');
 
         if(e.key == "Enter") {
           let selectedOpt
@@ -905,7 +919,7 @@ function runEditor(editor) {
           } 
           e.target.innerText = wholeText.substr(0,slashPos-1) + wholeText.substr(currentPos)
           editor.currentBlock().content = e.target.innerText
-          $("#popup"+editor.editor.id).css("display", "none")
+          ul.hidePopover()
           let id = editor.blockIds[editor.currentIdIndex + 1]
           if(editor.blockIds[editor.currentIdIndex + 1] == undefined) {
             id = "end"

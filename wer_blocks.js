@@ -373,10 +373,13 @@ class MathTex extends BlockClass {
     // $(block).css("flex-flow", "flex-wrap")
     $(block.thisBlock).css("flex-flow", "row-wrap")
     $(block.writeDiv).css("flex", "1")
-    $(mathInput).css("width", document.getElementsByClassName("blockEditor")[0].clientWidth/2)
-    $(mathInput).css("margin", "auto")
-    $(mathInput).css("position", "relative")
-    $(mathInput).css("display", "none")
+    $(mathInput).css("width", block.writeDiv.clientWidth/2)
+    mathInput.popover = "auto"
+    mathInput.style.margin = "0px"
+    // $(mathInput).css("margin", "auto")
+    // $(mathInput).css("position", "relative")
+    // $(mathInput).css("display", "none")
+    mathInput.hidePopover()
     mathInput.innerText = block.content
     block.writeDiv.innerHTML = ""
     block.content = ""
@@ -394,18 +397,19 @@ class MathTex extends BlockClass {
     }
   }
   typeOnClickJS(e,editor){
-    if(e.target.matches(".blockEditor") ) {
-      // console.log(document.activeElement)
-      // let thisBlock = editor.currentBlock().thisBlock
-      // let mathInput = thisBlock.querySelector(".MathInput")
-      // console.log("onClickJS", mathInput.style.display)
-      // if(mathInput.style.display == "none") {
-      //   mathInput.style.display = "inline"
-      //   mathInput.focus()
-      // } else {
-      //   mathInput.style.display = "none"
-      // }
-    }
+    let thisBlock = editor.currentBlock().thisBlock
+    let writeDiv = editor.currentBlock().writeDiv
+    let mathInput = thisBlock.querySelector(".MathInput")
+    const rect = editor.currentBlock().writeDiv.getBoundingClientRect();
+    mathInput.style.top = `${rect.bottom+10}px`
+    mathInput.style.left = `${rect.left+(writeDiv.clientWidth/4)}px` //center it
+    mathInput.showPopover()
+    setTimeout(() => {
+      mathInput.focus();
+      writeDiv.innerHTML = this.renderKatex(mathInput.innerText)
+      editor.currentBlock().content = mathInput.innerText
+      editor.currentBlock().setCaret('end', mathInput);
+    }, 0);
   }
   typeOnkeyDownJS(e,editor, shiftMod) {
     if(e.target.matches(".MathInput")) {
@@ -415,17 +419,26 @@ class MathTex extends BlockClass {
         }
         if(shiftMod != true) {
           e.preventDefault()
-          editor.currentBlock().thisBlock.querySelector(".MathInput").style.display = "none"
+          let mathInput = editor.currentBlock().thisBlock.querySelector(".MathInput")
+          mathInput.hidePopover()
           editor.nextBlock(true)
         }
       }
       if(e.key == "ArrowUp") {
-        editor.currentBlock().thisBlock.querySelector(".MathInput").style.display = "none"
+        let mathInput = editor.currentBlock().thisBlock.querySelector(".MathInput")
+        mathInput.hidePopover()
         editor.prevBlock()
       }
       if(e.key == "ArrowDown") {
-        editor.currentBlock().thisBlock.querySelector(".MathInput").style.display = "none"
+        let mathInput = editor.currentBlock().thisBlock.querySelector(".MathInput")
+        mathInput.hidePopover()
         editor.nextBlock()
+      }
+      if(e.key == "Escape") {
+        e.preventDefault()
+        // let mathInput = editor.currentBlock().thisBlock.querySelector(".MathInput")
+        // mathInput.hidePopover()
+        // editor.nextBlock()
       }
       if(e.key == "Backspace" &&(e.target.innerText == "\n" || e.target.innerText == "")) {
         e.preventDefault()
@@ -433,13 +446,20 @@ class MathTex extends BlockClass {
       }
     }
   }
-  typeOnFocusJS(e, editor) {
+  typeOnFocusJS(block, editor, e) {
+    if(e.toString() == "[object MouseEvent]") {
+      return none
+    }
     let thisBlock = editor.currentBlock().thisBlock
+    let writeDiv = editor.currentBlock().writeDiv
     let mathInput = thisBlock.querySelector(".MathInput")
-    mathInput.style.display = "inline"
+    const rect = editor.currentBlock().writeDiv.getBoundingClientRect();
+    mathInput.style.top = `${rect.bottom+10}px`
+    mathInput.style.left = `${rect.left+(writeDiv.clientWidth/4)}px` //center it
+    mathInput.showPopover()
     setTimeout(() => {
       mathInput.focus();
-      editor.currentBlock().writeDiv.innerHTML = this.renderKatex(mathInput.innerText)
+      writeDiv.innerHTML = this.renderKatex(mathInput.innerText)
       editor.currentBlock().content = mathInput.innerText
       editor.currentBlock().setCaret('end', mathInput);
     }, 0);
